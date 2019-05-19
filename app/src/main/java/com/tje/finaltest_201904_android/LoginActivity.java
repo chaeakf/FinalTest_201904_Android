@@ -1,10 +1,18 @@
 package com.tje.finaltest_201904_android;
 
+import android.content.Context;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import com.tje.finaltest_201904_android.databinding.ActivityLoginBinding;
+import com.tje.finaltest_201904_android.utils.ContextUtil;
+import com.tje.finaltest_201904_android.utils.ServerUtil;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class LoginActivity extends BaseActivity {
 
@@ -26,6 +34,47 @@ public class LoginActivity extends BaseActivity {
 
                 String inputId = act.idEdt.getText().toString();
                 String inputPw = act.pwEdt.getText().toString();
+
+                ServerUtil.postRequestSignIn(mContext, inputId, inputPw, new ServerUtil.JsonResponseHandler() {
+                    @Override
+                    public void onResponse(JSONObject json) {
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    int code = json.getInt("code");
+
+                                    if ( code == 200) {
+                                        JSONObject data = json.getJSONObject("data");
+                                        String  token = data.getString("token");
+
+                                        ContextUtil.setUserToken(mContext, token);
+
+                                        Intent intent = new Intent(mContext,MainActivity.class);
+                                        intent.putExtra("userToken", token);
+                                        startActivity(intent);
+
+
+                                    }else {
+                                        Toast.makeText(mContext, "로그인에 실패했습니다", Toast.LENGTH_SHORT).show();
+
+                                    }
+
+
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+
+
+                            }
+                        });
+
+
+
+
+                    }
+                });
             }
         });
 
